@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#081321">
+<title>SmartCalc</title>
+<style>
+:root{--bg:#081321;--panel:#101f32;--key:#172b42;--key2:#203a58;--text:#f3f7ff;--muted:#91a7c4;--blue:#168bff;--purple:#7447ff;--orange:#ff8a19;--green:#16c6a0}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:radial-gradient(ellipse at top right,#14294a 0,#081321 56%);color:var(--text);font-family:system-ui,-apple-system,Roboto,Arial,sans-serif;min-height:100vh}
+.app{max-width:520px;margin:auto;padding:16px 15px 28px}
+.top{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 16px}
+.brand{display:flex;gap:10px;align-items:center;font-size:20px;font-weight:800;letter-spacing:-.4px}
+.logo{width:39px;height:39px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#13b9ff,#7547ff);font-size:22px;box-shadow:0 6px 20px #168bff30}
+.top button,.pill{border:1px solid #28415e;background:#102138;color:var(--text);border-radius:12px;padding:10px 13px;font-weight:650}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:13px}
+.tab{border:1px solid #243c59;border-radius:12px;background:#0e1c2e;color:var(--muted);padding:11px 3px;font-weight:700}
+.tab.active{background:linear-gradient(110deg,#087fdc,#6946ed);color:white;border-color:transparent}
+.display{background:linear-gradient(150deg,#06101b,#0d1c2c);border:1px solid #203852;border-radius:22px;min-height:143px;padding:16px 17px 14px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:inset 0 1px #ffffff08;margin-bottom:14px;overflow:hidden}
+.small{color:var(--muted);font-size:15px;min-height:25px;text-align:right;overflow-wrap:anywhere}
+.result{font-size:clamp(34px,9vw,48px);font-weight:600;letter-spacing:-1.4px;text-align:right;overflow-wrap:anywhere;line-height:1.25;margin-top:5px}
+.keypad{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.key{min-height:59px;border:1px solid #2a405a;border-radius:16px;background:linear-gradient(145deg,#1a3048,#12253a);color:var(--text);font-size:22px;font-weight:600;box-shadow:0 3px 0 #050c14;cursor:pointer}
+.key:active{transform:translateY(2px);box-shadow:none;filter:brightness(1.18)}
+.key.fn{color:#69b9ff;background:#112a43}
+.key.op{background:linear-gradient(145deg,#254b75,#193657);color:#cce5ff}
+.key.eq{background:linear-gradient(135deg,#ff9c2e,#ff7416);color:white;border-color:#ff9c2e;font-size:27px}
+.key.wide{grid-column:span 2}
+.science{display:none;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.science.show{display:grid}
+.science .key{min-height:46px;font-size:16px;border-radius:12px}
+.bottom{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;margin:16px 4px 0}
+.bottom button{background:transparent;border:0;color:#70baff;font-weight:700;padding:8px}
+.panel{display:none;background:#0d1c2d;border:1px solid #243b55;border-radius:18px;padding:14px;margin-top:14px}
+.panel.show{display:block}
+.panel h2{font-size:18px;margin:0 0 12px}
+.history-item{padding:12px 0;border-bottom:1px solid #20344b;display:flex;justify-content:space-between;gap:10px}
+.history-item:last-child{border-bottom:0}
+.hist-exp{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.hist-res{font-weight:750;color:#ffb45e;margin-top:3px}
+.hist-use{background:#163453;border:0;color:#9bd0ff;border-radius:9px;padding:8px}
+.empty{color:var(--muted);text-align:center;padding:18px 4px}
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;gap:10px}
+select{background:#172b42;color:white;border:1px solid #35506d;border-radius:9px;padding:8px}
+.light{--bg:#edf3fa;--panel:#fff;--key:#fff;--key2:#dbe9f7;--text:#102033;--muted:#536980}
+body.light{background:linear-gradient(160deg,#e6f2ff,#f5f8fd);color:var(--text)}
+body.light .display{background:#fff;border-color:#d0ddec}
+body.light .key{background:linear-gradient(145deg,#fff,#e8f0f9);color:#102033;border-color:#d3dfec;box-shadow:0 3px 0 #d5deea}
+body.light .key.fn{background:#e1f1ff;color:#1263a5}
+body.light .key.op{background:#dcecff;color:#123c68}
+body.light .panel,body.light .tab{background:#fff;color:#344b63;border-color:#d0ddec}
+body.light .tab.active{color:white;background:linear-gradient(110deg,#087fdc,#6946ed)}
+body.light .top button,body.light .pill{background:#fff;color:#102033;border-color:#d0ddec}
+body.light .history-item{border-color:#dce5ef}
+@media(min-width:430px){.app{padding-top:22px}.key{min-height:65px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><div class="logo">＋</div><span>Smart<span style="color:#63aaff">Calc</span></span></div>
+    <button id="themeBtn" aria-label="Toggle theme">☾</button>
+  </header>
+  <nav class="tabs">
+    <button class="tab active" data-view="basic">Standard</button>
+    <button class="tab" data-view="science">Scientific</button>
+    <button class="tab" data-view="history">History</button>
+  </nav>
+  <section class="display" aria-live="polite">
+    <div class="small" id="expression">Ready to calculate</div>
+    <div class="result" id="result">0</div>
+  </section>
+  <section class="science" id="scienceKeys">
+    <button class="key fn" data-insert="sin(">sin</button><button class="key fn" data-insert="cos(">cos</button><button class="key fn" data-insert="tan(">tan</button><button class="key fn" data-insert="sqrt(">√</button>
+    <button class="key fn" data-insert="log(">log</button><button class="key fn" data-insert="ln(">ln</button><button class="key fn" data-insert="^">xʸ</button><button class="key fn" data-insert="π">π</button>
+    <button class="key fn" data-insert="(">(</button><button class="key fn" data-insert=")">)</button><button class="key fn" data-insert="!">n!</button><button class="key fn" data-insert="Ans">Ans</button>
+  </section>
+  <section class="keypad" id="keypad">
+    <button class="key fn" data-action="clear">AC</button><button class="key fn" data-action="back">⌫</button><button class="key fn" data-insert="%">%</button><button class="key op" data-insert="÷">÷</button>
+    <button class="key" data-insert="7">7</button><button class="key" data-insert="8">8</button><button class="key" data-insert="9">9</button><button class="key op" data-insert="×">×</button>
+    <button class="key" data-insert="4">4</button><button class="key" data-insert="5">5</button><button class="key" data-insert="6">6</button><button class="key op" data-insert="−">−</button>
+    <button class="key" data-insert="1">1</button><button class="key" data-insert="2">2</button><button class="key" data-insert="3">3</button><button class="key op" data-insert="+">+</button>
+    <button class="key wide" data-insert="0">0</button><button class="key" data-insert=".">.</button><button class="key eq" data-action="equals">=</button>
+  </section>
+  <section class="panel" id="historyPanel">
+    <h2>Recent calculations</h2><div id="historyList"><div class="empty">Your calculations will appear here.</div></div>
+    <button class="pill" id="clearHistory">Clear history</button>
+  </section>
+  <section class="panel" id="settingsPanel">
+    <h2>Settings</h2>
+    <div class="settings-row"><span>Angle unit</span><select id="angleMode"><option value="deg">Degrees (DEG)</option><option value="rad">Radians (RAD)</option></select></div>
+    <div class="settings-row"><span>Haptic feedback</span><span style="color:var(--muted)">Not enabled</span></div>
+    <div class="settings-row"><span>Version</span><span style="color:var(--muted)">1.0.0</span></div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.5">SmartCalc runs on your device. Calculations and history are stored locally. No account or internet connection is required.</p>
+  </section>
+  <footer class="bottom"><span>Simple · Fast · Private</span><button id="settingsBtn">⚙ Settings</button></footer>
+</div>
+<script>
+(() => {
+const $=id=>document.getElementById(id);
+let expr='', ans=0, history=[];
+try{history=JSON.parse(localStorage.getItem('smartcalc-history')||'[]')}catch(e){history=[]}
+const display=()=>{$('expression').textContent=expr||'Ready to calculate';$('result').textContent=expr?preview(expr):'0'};
+function insert(s){if(s==='Ans')s=String(ans);expr+=s;$('expression').textContent=expr;$('result').textContent=preview(expr)}
+function preview(s){try{let v=calculate(s);return format(v)}catch(e){return expr?'…':'0'}}
+function format(n){if(!Number.isFinite(n))return 'Error';if(Math.abs(n)<1e-12)return '0';return String(Number(n.toPrecision(12)))}
+function calculate(s){
+ if(!s.trim())return 0;
+ let x=s.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/π/g,'Math.PI').replace(/\bAns\b/g,String(ans));
+ x=x.replace(/(\d+(?:\.\d+)?)%/g,'($1/100)').replace(/\^/g,'**');
+ x=x.replace(/\bsqrt\(/g,'Math.sqrt(').replace(/\bsin\(/g,'Math.sin(').replace(/\bcos\(/g,'Math.cos(').replace(/\btan\(/g,'Math.tan(').replace(/\blog\(/g,'Math.log10(').replace(/\bln\(/g,'Math.log(');
+ const angle=$('angleMode').value;
+ if(angle==='deg')x=x.replace(/Math\.(sin|cos|tan)\(([^()]*)\)/g,(_,fn,a)=>`Math.${fn}((${a})*Math.PI/180)`);
+ // Convert factorials of numeric literals, e.g. 5! => 120.
+ x=x.replace(/(\d+(?:\.\d+)?)!/g,(_,n)=>String(factorial(Number(n))));
+ // Only permit calculator syntax, not arbitrary JavaScript.
+ if(!/^[0-9+\-*/().,\sA-Za-z]*$/.test(x) || /(?:window|document|constructor|Function|eval|alert|fetch|localStorage)/i.test(x))throw Error('Invalid');
+ if(!/^[0-9+\-*/().,\sA-Za-z]*$/.test(x))throw Error('Invalid');
+ const fn=new Function('"use strict"; return ('+x+');');
+ const v=fn();
+ if(typeof v!=='number'||!Number.isFinite(v))throw Error('Math error');
+ return v;
+}
+function factorial(n){if(n<0||n>170||!Number.isInteger(n))throw Error('Factorial needs an integer from 0 to 170');let r=1;for(let i=2;i<=n;i++)r*=i;return r}
+function equals(){try{let value=calculate(expr);ans=value;let item={exp:expr,res:format(value),time:Date.now()};history.unshift(item);history=history.slice(0,100);localStorage.setItem('smartcalc-history',JSON.stringify(history));$('expression').textContent=expr+' =';$('result').textContent=format(value);expr=format(value);renderHistory()}catch(e){$('expression').textContent='Check your expression';$('result').textContent='Error'}}
+function renderHistory(){let box=$('historyList');if(!history.length){box.innerHTML='<div class="empty">Your calculations will appear here.</div>';return}box.innerHTML='';history.forEach((it,i)=>{let row=document.createElement('div');row.className='history-item';let info=document.createElement('div');let ex=document.createElement('div');ex.className='hist-exp';ex.textContent=it.exp;let res=document.createElement('div');res.className='hist-res';res.textContent='= '+it.res;info.append(ex,res);let use=document.createElement('button');use.className='hist-use';use.textContent='Use';use.onclick=()=>{expr=it.res;display();setView('basic')};row.append(info,use);box.append(row)})}
+function setView(v){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===v));$('scienceKeys').classList.toggle('show',v==='science');$('historyPanel').classList.toggle('show',v==='history');$('keypad').style.display=v==='history'?'none':'grid';$('settingsPanel').classList.remove('show')}
+document.querySelectorAll('[data-insert]').forEach(b=>b.addEventListener('click',()=>insert(b.dataset.insert)));
+document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.action==='clear'){expr='';display()}if(b.dataset.action==='back'){expr=expr.slice(0,-1);display()}if(b.dataset.action==='equals')equals()}));
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+$('themeBtn').onclick=()=>{document.body.classList.toggle('light');$('themeBtn').textContent=document.body.classList.contains('light')?'☀':'☾';localStorage.setItem('smartcalc-theme',document.body.classList.contains('light')?'light':'dark')};
+$('settingsBtn').onclick=()=>{$('settingsPanel').classList.toggle('show');$('historyPanel').classList.remove('show');$('scienceKeys').classList.remove('show');$('keypad').style.display='grid';document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'))};
+$('clearHistory').onclick=()=>{history=[];localStorage.removeItem('smartcalc-history');renderHistory()};
+if(localStorage.getItem('smartcalc-theme')==='light'){document.body.classList.add('light');$('themeBtn').textContent='☀'}
+renderHistory();display();
+document.addEventListener('keydown',e=>{if(/^[0-9().]$/.test(e.key))insert(e.key);else if(['+','-','*','/','%','^'].includes(e.key))insert(e.key==='*'?'×':e.key==='/'?'÷':e.key==='-'?'−':e.key);else if(e.key==='Enter'||e.key==='=')equals();else if(e.key==='Backspace'){expr=expr.slice(0,-1);display()}else if(e.key==='Escape'){expr='';display()}});
+})();
+</script>
+</body>
+</html>
